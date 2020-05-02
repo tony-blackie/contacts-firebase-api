@@ -33,10 +33,7 @@ app.post("/contacts", async (req, res) => {
       contactsCollection,
       contact
     );
-    res
-      .set("Access-Control-Allow-Origin", "*")
-      .status(201)
-      .send(`Created a new contact: ${newDoc.id}`);
+    res.set("Access-Control-Allow-Origin", "*").status(201).send(newDoc);
   } catch (error) {
     res
       .set("Access-Control-Allow-Origin", "*")
@@ -46,23 +43,29 @@ app.post("/contacts", async (req, res) => {
 });
 // Update new contact
 app.patch("/contacts/:contactId", async (req, res) => {
-  const updatedDoc = await firebaseHelper.firestore.updateDocument(
-    db,
-    contactsCollection,
-    req.params.contactId,
-    req.body
-  );
-  res
-    .set("Access-Control-Allow-Origin", "*")
-    .status(204)
-    .send(`Update a new contact: ${updatedDoc}`);
+  firebaseHelper.firestore
+    .updateDocument(db, contactsCollection, req.params.contactId, {
+      // it was just req.body instead of this object. TODO: test
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      email: req.body.email,
+    })
+    .then((updatedDoc) => {
+      res
+        .set("Access-Control-Allow-Origin", "*")
+        .status(200)
+        .send(`${req.params.contactId} updated successfully`);
+    });
 });
 // View a contact
 app.get("/contacts/:contactId", (req, res) => {
   firebaseHelper.firestore
     .getDocument(db, contactsCollection, req.params.contactId)
     .then((doc) =>
-      res.set("Access-Control-Allow-Origin", "*").status(200).send(doc)
+      res
+        .set("Access-Control-Allow-Origin", "*")
+        .status(200)
+        .send({ ...doc, id: req.params.contactId })
     )
     .catch((error) =>
       res
@@ -81,7 +84,7 @@ app.get("/contacts", (req, res) => {
       res
         .set("Access-Control-Allow-Origin", "*")
         .status(200)
-        .send(map(data, (item) => item))
+        .send(map(data, (item, id) => ({ ...item, id })))
     )
     .catch((error) =>
       res
@@ -92,13 +95,18 @@ app.get("/contacts", (req, res) => {
 });
 // Delete a contact
 app.delete("/contacts/:contactId", async (req, res) => {
-  const deletedContact = await firebaseHelper.firestore.deleteDocument(
-    db,
-    contactsCollection,
-    req.params.contactId
-  );
-  res
-    .set("Access-Control-Allow-Origin", "*")
-    .status(204)
-    .send(`Contact is deleted: ${deletedContact}`);
+  firebaseHelper.firestore
+    .deleteDocument(db, contactsCollection, req.params.contactId)
+    .then(() => {
+      res
+        .set("Access-Control-Allow-Origin", "*")
+        .status(204)
+        .send(`${req.params.contactId} deleted successfully`);
+    })
+    .catch((error) =>
+      res
+        .set("Access-Control-Allow-Origin", "*")
+        .status(400)
+        .send(`Couldn't delete ${req.params.contactId}: ${error}`)
+    );
 });
