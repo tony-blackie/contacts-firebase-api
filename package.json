@@ -4,7 +4,7 @@
     "firebase-functions": "^3.6.1",
     "firebase-functions-helper": "^0.7.5",
     "firebase-tools": "^8.2.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "source-map-loader": "^0.2.4",
     "ts-loader": "^7.0.1",
     "typescript": "^3.8.3",
